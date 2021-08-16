@@ -4,6 +4,7 @@ Web application that processes data from txt files, xml files and database.
 ## Technologies
 Project is created with:
 * PHP 5.7
+* Laravel 7
 * Bootstrap 4
 * XAMPP Apache server
 * MySQL database
