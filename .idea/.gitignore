@@ -2,7 +2,7 @@
 /shelf/
 /workspace.xml
 # Datasource local storage ignored files
-/../../../../../:\xampp2\htdocs\Wallet\.idea/dataSources/
+/../../../../../:\xampp2\htdocs\PasswordWallet\.idea/dataSources/
 /dataSources.local.xml
 # Editor-based HTTP Client requests
 /httpRequests/
