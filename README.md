@@ -1,5 +1,5 @@
 # PasswordWallet
-Web application that processes data from txt files, xml files and database.
+Web application for storing passwords.
 	
 ## Technologies
 Project is created with:
