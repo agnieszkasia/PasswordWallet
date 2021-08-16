@@ -11,7 +11,6 @@
                         </div>
                     </div>
                     <div class="card-body ">
-                        {{--<div class="col-form-label">User ID </div>--}}
                         <div>Too many login attempts</div>
                         <div>Login: {{$name}}</div>
                         <div>IP: {{$ip}}</div>

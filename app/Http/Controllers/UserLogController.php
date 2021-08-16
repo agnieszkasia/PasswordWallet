@@ -34,28 +34,32 @@ class UserLogController
 
     public function createFail($request){
         $user = User::all()->where('name', $request['name'])->first();
-        if (empty($user)){
+        if ($user == null){
             $user = User::all()->where('email', $request->input('name'))->first();
         }
-        $loginAttempt = FailedLoginAttempt::all()->where('name', $user->name)
-            ->where('status', 'fail')->first();
-        if($loginAttempt != null){
-            $loginAttempt->update([
-                'time' => Carbon::now(),
-                'attempts' => $loginAttempt['attempts']+1
-            ]);
-            return true;
-        }
-        else {
-            $this->create([
-                'name' => $request['name'],
-                'ip_address' => $request->getClientIp(),
-                'user_id' => $user->id,
-                'status' => 'fail',
-                'time' => Carbon::now(),
-                'attempts' => 1
-            ]);
-            return false;
+
+        if ($user !== null) {
+            $loginAttempt = FailedLoginAttempt::all()->where('name', $user->name)
+                ->where('status', 'fail')->first();
+
+            if ($loginAttempt != null) {
+                $loginAttempt->update([
+                    'time' => Carbon::now(),
+                    'attempts' => $loginAttempt['attempts'] + 1
+                ]);
+                return true;
+            } else {
+                $this->create([
+                    'name' => $request['name'],
+                    'ip_address' => $request->getClientIp(),
+                    'user_id' => $user->id,
+                    'status' => 'fail',
+                    'time' => Carbon::now(),
+                    'attempts' => 1
+                ]);
+
+                return false;
+            }
         }
     }
 
@@ -111,7 +115,9 @@ class UserLogController
                                           GROUP BY user_id )
                                       ");
         $lockData = IpLock::all()->where('login', auth()->user()->name)->first();
-        $lock = $lockData['lock'];
+
+        if (isset($lockData['lock'])) $lock = $lockData['lock'];
+        else $lock = array();
 
         return view('showLogs', compact('failLogData', 'successLogData', 'lock'));
     }
@@ -128,14 +134,13 @@ class UserLogController
     }
 
     public function showIpLockTime(Request $request){
-        $name = $request['name'];
         $userFailLog = LockedUser::all()->where('ip', $request->getClientIp())->first();
 
         $lockTime = Carbon::parse($userFailLog['lock_time'])->diffForHumans(Carbon::now());
         $attempts = $userFailLog['attempts'];
 
         $ip = $request->getClientIp();
-        return view('showLockTime', compact('lockTime', 'name', 'ip', 'attempts'));
+        return view('showIpLockTime', compact('lockTime', 'ip', 'attempts'));
     }
 
     public function showLoginSettingsForm(){
@@ -161,8 +166,7 @@ class UserLogController
 
     public function userIsLocked($request){
         $userFailLog = LockedUser::all()->where('login', $request['name'])->first();
-        if ($userFailLog = 'null') {
-//            dd($userFailLog);
+        if ($userFailLog == null) {
             return false;
         }
         else {
@@ -178,7 +182,7 @@ class UserLogController
 
     public function ipIsLocked($request){
         $userFailLog = LockedUser::all()->where('ip', $request->getClientIp())->first();
-        if ($userFailLog = 'null'){
+        if ($userFailLog == null){
             return true;
         }
         else {
@@ -195,7 +199,7 @@ class UserLogController
     public function userHasTooManyLoginAttempts(Request $request){
         $controller = new UserLogController();
         $userFailLog = LockedUser::all()->where('login', $request['name'])->first();
-        if ($userFailLog = 'null'){
+        if ($userFailLog == null){
             return false;
         }
         else {
@@ -243,19 +247,23 @@ class UserLogController
     public function ipHasTooManyLoginAttempts(Request $request){
         $controller = new UserLogController();
         $userFailLog = LockedUser::all()->where('ip', $request->getClientIp())->first();
+//dd($userFailLog);
 
-
-        if ($userFailLog = 'null'){
+        if ($userFailLog == null){
+            LockedUser::create([
+                'ip' => $request->getClientIp(),
+                'login' => null,
+                'attempts' => '1',
+            ]);
             return false;
         }
         else {
             switch ($userFailLog['attempts']) {
-                case null:
-                    LockedUser::create([
-//                    'ip' => null,
-                        'ip' => $request->getClientIp(),
-                        'login' => null,
+                case '0':
+                    $time = Carbon::now();
+                    $userFailLog->update([
                         'attempts' => '1',
+                        'lock_time' => $time
                     ]);
                     return false;
                 case '1':
@@ -264,38 +272,39 @@ class UserLogController
                         'attempts' => '2',
                         'lock_time' => $time
                     ]);
-                    return $controller->showLockTime($request);
+                    return $controller->showIpLockTime($request);
                 case 2:
                     $time = Carbon::now()->addSeconds(10);
                     $userFailLog->update([
                         'attempts' => '3',
                         'lock_time' => $time
                     ]);
-                    return $controller->showLockTime($request);
+                    return $controller->showIpLockTime($request);
                 case 3:
                     $time = Carbon::now()->addMinutes(2);
                     $userFailLog->update([
                         'attempts' => '4',
                         'lock_time' => $time
                     ]);
-                    return $controller->showLockTime($request);
+                    return $controller->showIpLockTime($request);
                 case 4:
                     $time = Carbon::now()->endOfDay();
                     $userFailLog->update([
                         'attempts' => '5',
                         'lock_time' => $time
                     ]);
-                    return $controller->showLockTime($request);
+                    return $controller->showIpLockTime($request);
             }
         }
     }
 
     public function checkIfUserHasIpLock($request){
         $ip_lock = IpLock::all()->where('login', $request['name'])->first();
-        if ($ip_lock = 'null'){
-            return false;
+
+        if ($ip_lock == null){
+            return true;
         }
-        else if ($ip_lock['lock'] != 0){
+        else if ($ip_lock['lock'] !== 0){
             return true;
         }
         elseif($ip_lock['lock'] == 0) return false;

@@ -33,9 +33,9 @@ class PasswordController extends Controller
         $sharedPassword = DB::select("SELECT * FROM passwords p INNER JOIN share_passwords sp ON sp.password_id = p.id WHERE email = '$email'");
 
         $userActivity = DB::select("SELECT user_id, function_id, function_name, created_at, a.id
-                                      FROM data_changes a 
-                                      INNER JOIN user_functions f 
-                                      ON f.id = a.function_id 
+                                      FROM data_changes a
+                                      INNER JOIN user_functions f
+                                      ON f.id = a.function_id
                                       WHERE user_id = '$user_id'
                                       ORDER BY created_at
                                       ");
@@ -77,10 +77,10 @@ class PasswordController extends Controller
         $user_id = auth()->user()->id;
         $password_id = $request->input('password_id');
         $passwordData = DB::table('passwords')->where('id', $password_id)->first();
-//        dd($passwordData);
+
         if ($passwordData->user_id == $user_id){
             $passwordKey = $request->input('passwordkey');
-            $passwordData->password = $this->decryptPassword($passwordData, $passwordKey);
+            $password = $passwordData->password = $this->decryptPassword($passwordData, $passwordKey);
         }
         else{
             $password = DB::table('share_passwords')->where('password_id', $request->input('password_id'))->first();
@@ -89,9 +89,9 @@ class PasswordController extends Controller
         }
 
         $userActivity = DB::select("SELECT user_id, function_id, function_name, created_at, a.id
-                                      FROM data_changes a 
-                                      INNER JOIN user_functions f 
-                                      ON f.id = a.function_id 
+                                      FROM data_changes a
+                                      INNER JOIN user_functions f
+                                      ON f.id = a.function_id
                                       WHERE user_id = '$user_id'
                                       AND password_id = '$password_id'
                                       ORDER BY created_at
@@ -111,6 +111,7 @@ class PasswordController extends Controller
     public function create(array $data)
     {
         return Password::create([
+            'deleted' => '0',
             'user_id' => $data['user_id'],
             'web_address' => $data['web_address'],
             'login' => $data['login'],
@@ -185,7 +186,7 @@ class PasswordController extends Controller
         if (auth()->user()->edit_mode == 1){
             $passwordData = DB::table('passwords')->where('id', $request->input('password_id'))->first();
             $passwordKey = $request->input('passwordkey');
-            $passwordData->password = $this->decryptPassword($passwordData, $passwordKey);
+            $password = $passwordData->password = $this->decryptPassword($passwordData, $passwordKey);
             return view('editPassword', compact('passwordData', 'password'));
         } else return view('accessError');
     }

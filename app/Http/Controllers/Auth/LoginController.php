@@ -43,33 +43,32 @@ class LoginController extends Controller
         $user_login = $this->attemptLogin($request);
 
         if ($controller->checkIfUserHasIpLock($request) == true){
-
-            if($controller->ipIsLocked($request) == true OR $user_login == false){
+            if($controller->ipIsLocked($request) == true or $user_login == false){
                 if($controller->ipHasTooManyLoginAttempts($request) == true){
                     return $controller->showIpLockTime($request);
                 }
             }
         }
-        if ($user_lock == true OR $user_login == false){
+        if ($user_lock == true and $user_login == false){
             $controller->createFail($request);
             if($controller->userHasTooManyLoginAttempts($request) == true){
                 return $controller->showLockTime($request);
             }
         }
-        elseif ($user_lock == false OR $user_login == true){
+        elseif ($user_lock == false and $user_login == true){
             $controller->deleteUserLockout($request);
             Auth::loginUsingId($user->id);
             $controller->createSuccess($request);
             return redirect('/home');
-
         }
+
         return Redirect::back()->withErrors('name', 'Password does not match');
     }
 
     public function attemptLogin(Request $request){
         $user = User::all()->where('name', $request->input('name'))->first();
         $user2 =  User::all()->where('email', $request->input('name'))->first();
-        if (empty($user) AND empty($user2)) {
+        if ($user == null and $user2 == null) {
             return false;
         } else {
             $password = $request->input('password');

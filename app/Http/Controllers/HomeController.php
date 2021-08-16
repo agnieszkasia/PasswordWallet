@@ -44,7 +44,7 @@ class HomeController extends Controller
                                           GROUP BY user_id )
                                       ");
         $lockData = IpLock::all()->where('login', auth()->user()->name)->first();
-        if ($lockData = 'null'){
+        if ($lockData == null){
             $lock = '1';
         } else {
             $lock = $lockData['lock'];
