@@ -14,8 +14,14 @@ To run this project:
 
 * Download project
 * Put project folder inside htdocs folder (path is something like this C:\xampp\htdocs)
+* Go to project directory and type in terminal:
+```
+php artisan migrate
+php artisan db:seed
+```
+
 * Start the Apache server in the XAMPP Control Panel
-* Go to the browser and type in URL field: localhost/PasswordWallet/public/index.php
+* Go to the browser and type in URL field: [localhost/PasswordWallet/public/index.php](https://localhost/PasswordWallet/public/index.php)
 
 ## Application functionality
 * Register with two option of hashing login password (types of hashing - HMAC or SHA512)
